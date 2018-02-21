@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html ng-app="myapp">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TestMax Sample</title>
+  <!-- Bootstrap core CSS -->
+  <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+  <link href="./css/bootstrap-theme.min.css" rel="stylesheet">
+  <!-- Basic Module input -->
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular-animate.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular-sanitize.js"></script>
+  <script src="./js/ui-bootstrap-tpls-2.5.0.js"></script> -->
+  <!--Controller Module -->
+  <script src="./js/index.js"></script>
+  <script src="./js/parsed.js"></script>
+</head>
+
+<body ng-controller="MyController" ng-init = "init()">
+ <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand">TestMax Takehome</a>
+    </div>
+  </div>
+</nav>
+<br><br><br>
+<div class="container">
+  <!-- Welcome Screen -->
+  <div class="jumbotron" ng-hide="start">
+      <h2> Welcome to TestMax Take Home Questionaire </h2>
+      <h3> Author: Shuhui He </h3>
+        <div class="row">
+          <div class="col-md-4">
+            <p> Please select your Category</p>
+          </div>
+          <div class="col-md-4">
+            <select class="form-control" ng-model="selected" ng-change="changeData()" ng-options="o as o for o in choices"></select>
+          </div>
+        </div>
+      
+      <p> Number of questions: {{num_question}}</p>
+      <p>Click here to begin: <button type="button" class="btn btn-success" ng-click="startTest()">
+        Start the test!
+      </button></p>
+    </div>
+  <!-- Question Answering -->
+  <div class="panel panel-info" ng-show="start && !review && !submit">
+    <div class="panel-heading">
+    <div class="row">
+      <div class="col-sm-2">
+        <p>{{curr_question}}/{{num_question}}</p>
+      </div>
+      <div class="col-sm-2">
+        <p>Your progress:</p>
+      </div>
+    
+      <div class="col-sm-4">
+        <uib-progressbar max="num_question" value="curr_question"><span style="color:white; white-space:nowrap;">{{curr_question}} / {{num_question}}</uib-progressbar>
+      </div>
+      <div class="col-sm-1"></div>
+      <div class="col-sm-3">
+        <button type="button" class="btn btn-default" ng-disabled="curr_question - 1 == 0" ng-click="changeCurrQuestion(curr_question-1)"><i class="glyphicon glyphicon-chevron-left"></i>Previous</button>
+        <button type="button" class="btn btn-default" ng-disabled="curr_question == num_question" ng-click="changeCurrQuestion(curr_question+1)">Next<i class="glyphicon glyphicon-chevron-right"></i></button>
+      </div>
+    </div>    
+    </div>
+    <div class="row">
+      <div class="col-md-1"></div>
+      <div class="col-md-5">
+        <h5>Question {{curr_q.Id}}</h5>
+        <span style="white-space:pre-wrap;"> {{curr_q.Description}}</span>
+      </div>
+      <div class="col-md-5">
+        <h5> Your Choice </h5>
+        <div class="list-group">
+          <a ng-repeat="item in curr_q.Choices" ng-class="curr_select == $index + 1 ? 'list-group-item active' : 'list-group-item'" ng-click="changeCurrSelection($index)">{{$index+1}}.{{item}}</a>
+        </div>
+      </div>
+    </div>
+    <!-- Review Button and Submit Button -->
+    <div class="row">
+      <div class="col-md-1"></div>
+      <div class="col-md-8">
+        <button type="button" class="btn btn-info" ng-click="review = !review">Review my answers</button>
+      </div>
+      <div class="col-md-2">
+        <button type="button" class="btn btn-success" ng-show="curr_question == num_question" ng-click="submission()">Submit All Answers</button>
+      </div>
+    </div>
+    <br>
+ </div>
+  <!-- Review Screen -->
+  <div ng-show="review && !submit">
+   <button type="button" class="btn btn-success" ng-click="submission()">Submit All Answers</button>
+   <table class="table table-striped">
+    <tr>
+      <td><b>Question ID</b></td>
+      <td><b>Description</b></td>
+      <td><b>Your Answer</b></td>
+      <td><b>Review</b></td>
+    </tr>
+    <tr ng-repeat="item in dataSet">
+      <td>{{item.Id}}</td>
+      <td>{{item.Description}}</td>
+      <td>{{item.Choices[selection[$index] - 1]}}</td>
+      <td><button class="btn btn-info" ng-click="changeCurrQuestion($index+1)">Review</button></td>
+    </tr>
+    </table>
+  </div>
+  <!-- Final Submission -->
+  <div ng-show="submit" class="jumbotron">
+    <h2>Thanks for your submission!</h2>
+    <h4>You have <b>{{correct_num}}</b> out of {{num_question}} questions answered correctly</h4>
+    <div class="row">
+      <div class="col-md-6">
+        <button class="btn btn-info" ng-click="review = !review">View my submission</button>
+      </div>
+      <div class="col-md-6">
+        <button class="btn btn-warning" ng-click="init()">Redo The test again</button>
+      </div>
+    </div>
+  </div>
+  <!-- Review Submission -->
+  <div ng-show="submit && review">
+    <table class="table table-striped">
+    <tr>
+      <td><b>Question ID</b></td>
+      <td><b>Description</b></td>
+      <td><b>Your Answer</b></td>
+      <td><b>Correct Ans</b></td>
+      <td><b>Result</b></td>
+    </tr>
+    <tr ng-repeat="item in dataSet">
+      <td>{{item.Id}}</td>
+      <td>{{item.Description}}</td>
+      <td>{{item.Choices[selection[$index] - 1]}}</td>
+      <td>{{item.Choices[item.Ans-1]}}</td>
+      <td>{{selection[$index] == item.Ans}}</td>
+    </tr>
+    </table>
+  </div>
+  </div>
+  </body>
+  </html>
